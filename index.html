@@ -63,7 +63,7 @@ button:disabled{opacity:.4}
 </head>
 <body>
 <main>
-<header><h1>音檔練習器</h1></header>
+<header><h1>音檔練習器</h1><span id="swst" class="note" style="margin:0">離線：檢查中…</span></header>
 
 <section id="browser">
 <div class="row">
@@ -238,7 +238,17 @@ tl.onpointerdown=e=>{tl.setPointerCapture(e.pointerId);seekTo(e)};
 tl.onpointermove=e=>{if(tl.hasPointerCapture(e.pointerId))seekTo(e)};
 tl.onkeydown=e=>{if(e.key==='ArrowLeft')skip(-5);if(e.key==='ArrowRight')skip(5)};
 render();
-if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+(async()=>{
+  const el=$('#swst');
+  if(!('serviceWorker' in navigator)){el.textContent='離線：此環境不支援';return}
+  try{
+    await navigator.serviceWorker.register('./sw.js');
+    await navigator.serviceWorker.ready;
+    const c=await caches.open('audio-player-v2');
+    const n=(await c.keys()).length;
+    el.textContent=n>=5?'離線：已就緒 ✓':'離線：快取不完整 '+n+'/5';
+  }catch(e){el.textContent='離線：失敗（'+((e&&e.name)||'未知')+'）'}
+})();
 </script>
 </body>
 </html>
